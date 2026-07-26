@@ -56,12 +56,12 @@ El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4
 ```
                          10.7.37.0/24
                                │
-                        f0/0: 10.7.37.1
+                        e0/0: 10.7.37.1
                        ┌───────┴───────┐
                        │    Router R1  │
                        │  Cisco IOS    │
                        └───────┬───────┘
-                          f0/0 │
+                          e0/0 │
                        ┌───────┴───────┐
                        │    Switch     │
                        │  Cisco IOS    │
