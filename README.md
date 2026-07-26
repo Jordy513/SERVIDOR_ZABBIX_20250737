@@ -251,7 +251,7 @@ Contenido:
 network:
   version: 2
   ethernets:
-    ens3:
+    ens34:
       dhcp4: no
       addresses:
         - 10.7.37.253/24
@@ -266,7 +266,7 @@ Aplicar:
 
 ```bash
 sudo netplan apply
-ip addr show ens3
+ip addr show ens34
 ```
 
 > Ver evidencia: [06_ubuntu_ip.png](#06_ubuntu_ippng)
@@ -276,9 +276,9 @@ ip addr show ens3
 ### 5.2 Instalación de Zabbix
 
 ```bash
-# Descargar e instalar repositorio Zabbix 7.0 LTS (Ubuntu 20.04)
-wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu20.04_all.deb
-sudo dpkg -i zabbix-release_7.0-2+ubuntu20.04_all.deb
+# Descargar e instalar repositorio Zabbix
+wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu24.04_all.deb
+sudo dpkg -i zabbix-release_7.0-2+ubuntu24.04_all.deb
 sudo apt update
 
 # Instalar Zabbix server, frontend y agente
@@ -302,7 +302,7 @@ sudo mysql -uroot -e "
 zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | \
     mysql --default-character-set=utf8mb4 -uzabbix -pZabbixPass123! zabbix
 
-# Desactivar el flag una vez importado el schema (recomendación oficial)
+# Desactivar el flag una vez importado el schema
 sudo mysql -uroot -e "SET GLOBAL log_bin_trust_function_creators = 0;"
 
 # Configurar contraseña de BD en Zabbix
@@ -519,7 +519,7 @@ Todas las capturas están en la carpeta [`screenshots/`](screenshots/).
 | 03 | [`03_router_snmp.png`](screenshots/03_router_snmp.png) | `show snmp community` en el Router confirmando la comunidad `public_ro` con acceso `NOAUTHNOPRIV` y permisos `ro`. |
 | 04 | [`04_switch_ip.png`](screenshots/04_switch_ip.png) | `show interface vlan 1` en el Switch mostrando la IP `10.7.37.2/24` en estado `up/up`. |
 | 05 | [`05_switch_snmp.png`](screenshots/05_switch_snmp.png) | `show snmp community` en el Switch confirmando la comunidad `public_ro` con permisos `ro`. |
-| 06 | [`06_ubuntu_ip.png`](screenshots/06_ubuntu_ip.png) | Terminal Ubuntu mostrando `ip addr show ens3` con la IP estática `10.7.37.253/24` configurada y activa. |
+| 06 | [`06_ubuntu_ip.png`](screenshots/06_ubuntu_ip.png) | Terminal Ubuntu mostrando `ip addr show ens34` con la IP estática `10.7.37.253/24` configurada y activa. |
 | 07 | [`07_zabbix_instalado.png`](screenshots/07_zabbix_instalado.png) | Terminal Ubuntu mostrando `systemctl status zabbix-server` con estado `active (running)`. |
 | 08 | [`08_zabbix_gui_login.png`](screenshots/08_zabbix_gui_login.png) | Navegador del host Windows mostrando la pantalla de login de Zabbix en `http://10.7.37.253/zabbix`. |
 | 09 | [`09_zabbix_setup_ok.png`](screenshots/09_zabbix_setup_ok.png) | Asistente de configuración de Zabbix con todos los prerrequisitos en verde y la conexión a la BD verificada. |
