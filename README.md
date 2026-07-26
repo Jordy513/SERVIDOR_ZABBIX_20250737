@@ -123,7 +123,7 @@ El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4
 hostname R1
 
 interface ethernet0/0
- description LAN-10.7.37.0/24
+ description RED-LAN
  ip address 10.7.37.1 255.255.255.0
  no shutdown
 ```
