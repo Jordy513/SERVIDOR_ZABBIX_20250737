@@ -365,8 +365,6 @@ Seguir el asistente de instalación web (`setup.php`):
 
 ### 5.4 Agregar el Router como Equipo
 
-> ⚠️ En Zabbix 6.4+ el antiguo menú **"Configuration"** se renombró a **"Data collection"** (`Recopilación de datos` en español). Ya no existe un menú llamado "Configuration".
-
 **Ruta GUI:** `Recopilación de datos → Equipos → Crear equipo` (botón arriba a la derecha)
 
 **Pestaña Equipo:**
@@ -384,7 +382,7 @@ Seguir el asistente de instalación web (`setup.php`):
 
 | Campo | Valor |
 |---|---|
-| Plantillas | `Cisco IOS SNMP` (buscar y seleccionar) |
+| Plantillas | `Cisco IOS by SNMP` (buscar y seleccionar) |
 
 **Pestaña Macros:**
 
