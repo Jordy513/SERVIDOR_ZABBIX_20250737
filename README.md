@@ -343,7 +343,7 @@ http://10.7.37.253/zabbix
 
 Seguir el asistente de configuración inicial:
 
-1. Verificar prerrequisitos — todos deben estar en verde ✅
+1. Verificar prerrequisitos
 2. Configurar la conexión a la BD (usuario: `zabbix`, contraseña: `ZabbixPass123!`, DB: `zabbix`)
 3. Configurar el servidor Zabbix (host: `localhost`, puerto: `10051`)
 4. Confirmar y finalizar
