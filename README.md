@@ -88,7 +88,7 @@ El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4
 
 | Dispositivo | Interfaz | Dirección IP | Máscara | Gateway | Método | Rol |
 |---|---|---|---|---|---|---|
-| **R1** | f0/0 | 10.7.37.1 | /24 | — | Estática | Gateway LAN + DHCP + SNMP |
+| **R1** | e0/0 | 10.7.37.1 | /24 | — | Estática | Gateway LAN + DHCP + SNMP |
 | **Switch** | VLAN 1 (SVI) | 10.7.37.2 | /24 | 10.7.37.1 | Estática | Conmutación + SNMP |
 | **Ubuntu (Zabbix)** | e0 | 10.7.37.253 | /24 | 10.7.37.1 | Estática | Servidor de monitoreo |
 | **W10 (Host)** | e0 | 10.7.37.X | /24 | 10.7.37.1 | **DHCP** | Cliente + acceso GUI Zabbix |
@@ -122,7 +122,7 @@ El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4
 ```cisco
 hostname R1
 
-interface FastEthernet0/0
+interface ethernet0/0
  description LAN-10.7.37.0/24
  ip address 10.7.37.1 255.255.255.0
  no shutdown
