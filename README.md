@@ -23,8 +23,8 @@
    - [5.1 Configuración de IP Estática](#51-configuración-de-ip-estática)
    - [5.2 Instalación de Zabbix](#52-instalación-de-zabbix)
    - [5.3 Acceso a la GUI de Zabbix](#53-acceso-a-la-gui-de-zabbix)
-   - [5.4 Agregar el Router como Host](#54-agregar-el-router-como-host)
-   - [5.5 Agregar el Switch como Host](#55-agregar-el-switch-como-host)
+   - [5.4 Agregar el Router como Equipo](#54-agregar-el-router-como-equipo)
+   - [5.5 Agregar el Switch como Equipo](#55-agregar-el-switch-como-equipo)
    - [5.6 Verificar Eventos y Datos SNMP](#56-verificar-eventos-y-datos-snmp)
 6. [Parte 4 — PC Cliente](#6-parte-4--pc-cliente)
    - [6.1 Verificar IP por DHCP](#61-verificar-ip-por-dhcp)
@@ -45,7 +45,7 @@ Esta topología implementa un sistema de monitoreo centralizado mediante **Zabbi
 * Verificar desde el Zabbix los eventos, interfaces, carga de CPU y otros datos de telemetría del Router y el Switch mediante SNMP v2c.
 * Verificar desde el PC Cliente (host Windows) la asignación DHCP y los datos SNMP de los dispositivos de red.
 
-El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4 dígitos `0737` → `XX.XX = 07.37`. La red utilizada es `10.7.37.0/24` para toda la topología — R1 actúa como gateway, DHCP server y agente SNMP sobre su única interfaz `f0/0`.
+El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4 dígitos `0737` → `XX.XX = 07.37`. La red utilizada es `10.7.37.0/24` para toda la topología — R1 actúa como gateway, DHCP server y agente SNMP sobre su única interfaz `e0/0`.
 
 ---
 
@@ -90,7 +90,7 @@ El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4
 |---|---|---|---|---|---|---|
 | **R1** | e0/0 | 10.7.37.1 | /24 | — | Estática | Gateway LAN + DHCP + SNMP |
 | **Switch** | VLAN 1 (SVI) | 10.7.37.2 | /24 | 10.7.37.1 | Estática | Conmutación + SNMP |
-| **Ubuntu (Zabbix)** | e0 | 10.7.37.253 | /24 | 10.7.37.1 | Estática | Servidor de monitoreo |
+| **Ubuntu (Zabbix)** | ens34 | 10.7.37.253 | /24 | 10.7.37.1 | Estática | Servidor de monitoreo |
 | **W10 (Host)** | e0 | 10.7.37.X | /24 | 10.7.37.1 | **DHCP** | Cliente + acceso GUI Zabbix |
 
 **Parámetros SNMP:**
@@ -186,6 +186,8 @@ show snmp community
 ```
 
 > Ver evidencia: [03_router_snmp.png](#03_router_snmppng)
+>
+> Nota: puede aparecer también una comunidad `ILMI` de solo lectura creada automáticamente por el subsistema ATM del IOS. Es un artefacto normal de la imagen de IOS usada en el simulador, no algo configurado — Zabbix no la utiliza.
 
 ---
 
@@ -239,10 +241,10 @@ show snmp community
 
 ### 5.1 Configuración de IP Estática
 
-Editar el archivo de configuración de red de Ubuntu:
+El servidor Zabbix corre sobre **Ubuntu 24.04 LTS**, con `NetworkManager` como renderer de Netplan (por eso las interfaces se declaran de forma mínima).
 
 ```bash
-sudo nano /etc/netplan/00-installer-config.yaml
+sudo nano /etc/netplan/50-cloud-init.yaml
 ```
 
 Contenido:
@@ -250,9 +252,12 @@ Contenido:
 ```yaml
 network:
   version: 2
+  renderer: NetworkManager
   ethernets:
+    ens33:
+      dhcp4: true
     ens34:
-      dhcp4: no
+      dhcp4: false
       addresses:
         - 10.7.37.253/24
       routes:
@@ -261,6 +266,8 @@ network:
       nameservers:
         addresses: [8.8.8.8, 8.8.4.4]
 ```
+
+`ens33` mantiene DHCP para salida a internet (descarga de paquetes); `ens34` es la interfaz estática hacia la LAN del laboratorio.
 
 Aplicar:
 
@@ -275,13 +282,15 @@ ip addr show ens34
 
 ### 5.2 Instalación de Zabbix
 
+Instalado: **Zabbix 7.0 LTS sobre Ubuntu 24.04 LTS** (Ubuntu 20.04 no publica paquetes de `zabbix-server-mysql` ni `zabbix-frontend-php` en el repositorio oficial de Zabbix — solo agente y sql-scripts — por lo que el servidor requiere 22.04 o superior).
+
 ```bash
-# Descargar e instalar repositorio Zabbix
+# Repositorio oficial de Zabbix 7.0 LTS para Ubuntu 24.04
 wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu24.04_all.deb
 sudo dpkg -i zabbix-release_7.0-2+ubuntu24.04_all.deb
 sudo apt update
 
-# Instalar Zabbix server, frontend y agente
+# Instalar Zabbix server, frontend, apache-conf, sql-scripts y agente
 sudo apt install zabbix-server-mysql zabbix-frontend-php \
     zabbix-apache-conf zabbix-sql-scripts zabbix-agent -y
 
@@ -332,46 +341,50 @@ Desde el **host Windows**, abrir el navegador y navegar a:
 http://10.7.37.253/zabbix
 ```
 
-**Credenciales por defecto:**
+Seguir el asistente de instalación web (`setup.php`):
 
-| Campo | Valor |
-|---|---|
-| Usuario | `Admin` |
-| Contraseña | `zabbix` |
-
-> Cambiar la contraseña al primer ingreso desde `User settings → Change password`.
-
-Seguir el asistente de configuración inicial:
-
-1. Verificar prerrequisitos
-2. Configurar la conexión a la BD (usuario: `zabbix`, contraseña: `ZabbixPass123!`, DB: `zabbix`)
-3. Configurar el servidor Zabbix (host: `localhost`, puerto: `10051`)
-4. Confirmar y finalizar
+1. **Bienvenido**
+2. **Comprobación de requisitos previos** — todo debe quedar en verde (versión de PHP, memory_limit, extensiones, etc.)
+3. **Configurar la conexión de BD** — tipo `MySQL`, servidor `localhost`, puerto `0` (por defecto), nombre de BD `zabbix`, usuario `zabbix`, contraseña `ZabbixPass123!`
+4. **Ajustes** — nombre del servidor Zabbix, zona horaria (`America/Santo_Domingo`), tema
+5. **Resumen de preinstalación**
+6. **Instalar** → Finalizar
 
 > Ver evidencia: [08_zabbix_gui_login.png](#08_zabbix_gui_loginpng) y [09_zabbix_setup_ok.png](#09_zabbix_setup_okpng)
 
+**Credenciales por defecto (después de finalizar el asistente):**
+
+| Campo | Valor |
+|---|---|
+| Usuario | `Admin` (con A mayúscula) |
+| Contraseña | `zabbix` |
+
+> Cambiar la contraseña al primer ingreso desde `Configuración de usuario → Contraseña`.
+
 ---
 
-### 5.4 Agregar el Router como Host
+### 5.4 Agregar el Router como Equipo
 
-**Ruta GUI:** `Configuration → Hosts → Create host`
+> ⚠️ En Zabbix 6.4+ el antiguo menú **"Configuration"** se renombró a **"Data collection"** (`Recopilación de datos` en español). Ya no existe un menú llamado "Configuration".
 
-**Pestaña Host:**
+**Ruta GUI:** `Recopilación de datos → Equipos → Crear equipo` (botón arriba a la derecha)
 
-| Campo | Valor |
-|---|---|
-| Host name | `R1` |
-| Visible name | `Router R1 — 10.7.37.1` |
-| Groups | `Network devices` |
-| Interfaces → Add → SNMP | |
-| IP address | `10.7.37.1` |
-| Port | `161` |
-
-**Pestaña Templates:**
+**Pestaña Equipo:**
 
 | Campo | Valor |
 |---|---|
-| Templates | `Cisco IOS SNMP` (buscar y seleccionar) |
+| Nombre de host | `R1` |
+| Nombre visible | `Router R1 — 10.7.37.1` |
+| Grupos | `Network devices` |
+| Interfaces → Agregar → SNMP | |
+| Dirección IP | `10.7.37.1` |
+| Puerto | `161` |
+
+**Pestaña Plantillas:**
+
+| Campo | Valor |
+|---|---|
+| Plantillas | `Cisco IOS SNMP` (buscar y seleccionar) |
 
 **Pestaña Macros:**
 
@@ -380,34 +393,34 @@ Seguir el asistente de configuración inicial:
 | `{$SNMP_COMMUNITY}` | `public_ro` |
 | `{$SNMP.TIMEOUT}` | `5s` |
 
-Clic en **Add** para guardar.
+Clic en **Agregar** para guardar.
 
-> Después de unos minutos el ícono del host cambiará de gris a verde indicando que Zabbix recibió datos SNMP correctamente.
+> Después de unos minutos el ícono del equipo cambiará de gris a verde indicando que Zabbix recibió datos SNMP correctamente.
 
 > Ver evidencia: [10_zabbix_host_router.png](#10_zabbix_host_routerpng) y [11_zabbix_router_verde.png](#11_zabbix_router_verdepng)
 
 ---
 
-### 5.5 Agregar el Switch como Host
+### 5.5 Agregar el Switch como Equipo
 
-**Ruta GUI:** `Configuration → Hosts → Create host`
+**Ruta GUI:** `Recopilación de datos → Equipos → Crear equipo`
 
-**Pestaña Host:**
-
-| Campo | Valor |
-|---|---|
-| Host name | `Switch-Lab` |
-| Visible name | `Switch Cisco — 10.7.37.2` |
-| Groups | `Network devices` |
-| Interfaces → Add → SNMP | |
-| IP address | `10.7.37.2` |
-| Port | `161` |
-
-**Pestaña Templates:**
+**Pestaña Equipo:**
 
 | Campo | Valor |
 |---|---|
-| Templates | `Cisco IOS SNMP` |
+| Nombre de host | `Switch-Lab` |
+| Nombre visible | `Switch Cisco — 10.7.37.2` |
+| Grupos | `Network devices` |
+| Interfaces → Agregar → SNMP | |
+| Dirección IP | `10.7.37.2` |
+| Puerto | `161` |
+
+**Pestaña Plantillas:**
+
+| Campo | Valor |
+|---|---|
+| Plantillas | `Cisco IOS SNMP` |
 
 **Pestaña Macros:**
 
@@ -415,7 +428,7 @@ Clic en **Add** para guardar.
 |---|---|
 | `{$SNMP_COMMUNITY}` | `public_ro` |
 
-Clic en **Add** para guardar.
+Clic en **Agregar** para guardar.
 
 > Ver evidencia: [12_zabbix_host_switch.png](#12_zabbix_host_switchpng) y [13_zabbix_switch_verde.png](#13_zabbix_switch_verdepng)
 
@@ -425,7 +438,7 @@ Clic en **Add** para guardar.
 
 **Verificar datos de monitoreo del Router:**
 
-**Ruta:** `Monitoring → Hosts → Router-Lab → Latest data`
+**Ruta:** `Monitorización → Últimos datos` → filtrar por equipo `R1`
 
 Debe mostrar métricas SNMP como:
 
@@ -440,7 +453,7 @@ Debe mostrar métricas SNMP como:
 
 **Verificar eventos:**
 
-**Ruta:** `Monitoring → Problems` o `Monitoring → Events`
+**Ruta:** `Monitorización → Problemas`
 
 Aquí aparecen las alertas generadas automáticamente por los templates — por ejemplo si una interfaz del router baja, Zabbix genera un evento de problema.
 
@@ -448,7 +461,7 @@ Aquí aparecen las alertas generadas automáticamente por los templates — por 
 
 **Verificar gráficas del Switch:**
 
-**Ruta:** `Monitoring → Hosts → Switch-Lab → Graphs`
+**Ruta:** `Monitorización → Últimos datos` → filtrar por equipo `Switch-Lab` → clic en el ítem deseado → ícono de gráfico
 
 > Ver evidencia: [16_zabbix_graphs_switch.png](#16_zabbix_graphs_switchpng)
 
@@ -514,7 +527,7 @@ Todas las capturas están en la carpeta [`screenshots/`](screenshots/).
 
 | # | Archivo | Descripción |
 |---|---|---|
-| 01 | [`01_router_interfaces.png`](screenshots/01_router_interfaces.png) | `show ip interface brief` en R1 mostrando `f0/0: 10.7.37.1` en estado `up/up`. |
+| 01 | [`01_router_interfaces.png`](screenshots/01_router_interfaces.png) | `show ip interface brief` en R1 mostrando `e0/0: 10.7.37.1` en estado `up/up`. |
 | 02 | [`02_router_dhcp.png`](screenshots/02_router_dhcp.png) | `show ip dhcp binding` en el Router mostrando al menos un lease asignado al PC Cliente y al servidor Ubuntu, con sus IPs del rango `.10–.200`. |
 | 03 | [`03_router_snmp.png`](screenshots/03_router_snmp.png) | `show snmp community` en el Router confirmando la comunidad `public_ro` con acceso `NOAUTHNOPRIV` y permisos `ro`. |
 | 04 | [`04_switch_ip.png`](screenshots/04_switch_ip.png) | `show interface vlan 1` en el Switch mostrando la IP `10.7.37.2/24` en estado `up/up`. |
@@ -522,14 +535,14 @@ Todas las capturas están en la carpeta [`screenshots/`](screenshots/).
 | 06 | [`06_ubuntu_ip.png`](screenshots/06_ubuntu_ip.png) | Terminal Ubuntu mostrando `ip addr show ens34` con la IP estática `10.7.37.253/24` configurada y activa. |
 | 07 | [`07_zabbix_instalado.png`](screenshots/07_zabbix_instalado.png) | Terminal Ubuntu mostrando `systemctl status zabbix-server` con estado `active (running)`. |
 | 08 | [`08_zabbix_gui_login.png`](screenshots/08_zabbix_gui_login.png) | Navegador del host Windows mostrando la pantalla de login de Zabbix en `http://10.7.37.253/zabbix`. |
-| 09 | [`09_zabbix_setup_ok.png`](screenshots/09_zabbix_setup_ok.png) | Asistente de configuración de Zabbix con todos los prerrequisitos y la conexión a la BD verificada. |
-| 10 | [`10_zabbix_host_router.png`](screenshots/10_zabbix_host_router.png) | Formulario `Create host` en Zabbix mostrando R1 configurado con interfaz SNMP `10.7.37.1:161`, template `Cisco IOS SNMP` y macro `{$SNMP_COMMUNITY}=public_ro`. |
-| 11 | [`11_zabbix_router_verde.png`](screenshots/11_zabbix_router_verde.png) | Lista de hosts en Zabbix mostrando `R1` con ícono verde — confirmando que Zabbix recibe datos SNMP del Router correctamente. |
-| 12 | [`12_zabbix_host_switch.png`](screenshots/12_zabbix_host_switch.png) | Formulario `Create host` mostrando el Switch configurado con interfaz SNMP `10.7.37.2:161` y template `Cisco IOS SNMP`. |
-| 13 | [`13_zabbix_switch_verde.png`](screenshots/13_zabbix_switch_verde.png) | Lista de hosts mostrando `Switch-Lab` con ícono verde — Zabbix recibiendo datos SNMP del Switch. |
-| 14 | [`14_zabbix_latest_data_router.png`](screenshots/14_zabbix_latest_data_router.png) | `Monitoring → Hosts → R1 → Latest data` mostrando métricas SNMP activas: uptime, descripción del sistema, tráfico de interfaces. |
-| 15 | [`15_zabbix_events.png`](screenshots/15_zabbix_events.png) | `Monitoring → Problems` o `Monitoring → Events` mostrando los eventos generados por los templates de Cisco IOS SNMP. |
-| 16 | [`16_zabbix_graphs_switch.png`](screenshots/16_zabbix_graphs_switch.png) | `Monitoring → Hosts → Switch-Lab → Graphs` mostrando al menos una gráfica de tráfico o CPU activa con datos. |
+| 09 | [`09_zabbix_setup_ok.png`](screenshots/09_zabbix_setup_ok.png) | Asistente de instalación web de Zabbix en el paso "Comprobación de requisitos previos" con todo en verde. |
+| 10 | [`10_zabbix_host_router.png`](screenshots/10_zabbix_host_router.png) | Formulario `Crear equipo` en Zabbix mostrando R1 configurado con interfaz SNMP `10.7.37.1:161`, plantilla `Cisco IOS SNMP` y macro `{$SNMP_COMMUNITY}=public_ro`. |
+| 11 | [`11_zabbix_router_verde.png`](screenshots/11_zabbix_router_verde.png) | Lista de equipos en Zabbix mostrando `R1` con ícono verde — confirmando que Zabbix recibe datos SNMP del Router correctamente. |
+| 12 | [`12_zabbix_host_switch.png`](screenshots/12_zabbix_host_switch.png) | Formulario `Crear equipo` mostrando el Switch configurado con interfaz SNMP `10.7.37.2:161` y plantilla `Cisco IOS SNMP`. |
+| 13 | [`13_zabbix_switch_verde.png`](screenshots/13_zabbix_switch_verde.png) | Lista de equipos mostrando `Switch-Lab` con ícono verde — Zabbix recibiendo datos SNMP del Switch. |
+| 14 | [`14_zabbix_latest_data_router.png`](screenshots/14_zabbix_latest_data_router.png) | `Monitorización → Últimos datos` filtrado por `R1` mostrando métricas SNMP activas: uptime, descripción del sistema, tráfico de interfaces. |
+| 15 | [`15_zabbix_events.png`](screenshots/15_zabbix_events.png) | `Monitorización → Problemas` mostrando los eventos generados por las plantillas de Cisco IOS SNMP. |
+| 16 | [`16_zabbix_graphs_switch.png`](screenshots/16_zabbix_graphs_switch.png) | `Monitorización → Últimos datos` filtrado por `Switch-Lab` mostrando al menos una gráfica de tráfico o CPU activa con datos. |
 | 17 | [`17_cliente_dhcp.png`](screenshots/17_cliente_dhcp.png) | `ipconfig /all` en el host Windows mostrando IP `10.7.37.X` asignada por DHCP con gateway `10.7.37.1` y servidor DHCP `10.7.37.1`. |
 | 18 | [`18_cliente_snmpwalk_router.png`](screenshots/18_cliente_snmpwalk_router.png) | Terminal del host Windows mostrando la salida de `snmpwalk` hacia `10.7.37.1` con los campos `sysDescr`, `sysUpTime`, `sysContact` y `sysLocation` del Router. |
 | 19 | [`19_cliente_snmpwalk_switch.png`](screenshots/19_cliente_snmpwalk_switch.png) | Terminal del host Windows mostrando la salida de `snmpwalk` hacia `10.7.37.2` con los datos SNMP del Switch. |
@@ -552,17 +565,17 @@ Todas las capturas están en la carpeta [`screenshots/`](screenshots/).
 * ✅ `show snmp community` en el Router y el Switch — comunidad `public_ro`.
 * ✅ `ipconfig /all` en el host Windows — IP DHCP del rango `10.7.37.10–.200`.
 * ✅ Login en la GUI de Zabbix desde el host Windows (`http://10.7.37.253/zabbix`).
-* ✅ Lista de hosts en Zabbix — Router y Switch con ícono verde.
-* ✅ `Monitoring → Latest data` del Router mostrando métricas SNMP activas.
-* ✅ `Monitoring → Events` mostrando eventos de los dispositivos monitoreados.
+* ✅ Lista de equipos en Zabbix — Router y Switch con ícono verde.
+* ✅ `Monitorización → Últimos datos` del Router mostrando métricas SNMP activas.
+* ✅ `Monitorización → Problemas` mostrando eventos de los dispositivos monitoreados.
 * ✅ `snmpwalk` desde el host Windows hacia el Router y el Switch.
 
 ---
 
 ## 9. Referencias
 
-* Zabbix LLC. (2024). *Zabbix 6.0 LTS Documentation — Installation on Ubuntu*. zabbix.com.
-* Zabbix LLC. (2024). *Zabbix 6.0 LTS Documentation — SNMP Monitoring*.
+* Zabbix LLC. (2026). *Zabbix 7.0 LTS Documentation — Installation on Ubuntu*. zabbix.com.
+* Zabbix LLC. (2026). *Zabbix 7.0 LTS Documentation — SNMP Monitoring*.
 * Cisco Systems. (2024). *Cisco IOS Network Management Command Reference — SNMP*.
 * Case, J. et al. (1990). *RFC 1157 — A Simple Network Management Protocol (SNMP)*. IETF.
 * Stallings, W. (2022). *Cryptography and Network Security: Principles and Practice (8th Ed.)*. Pearson.
