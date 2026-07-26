@@ -276,9 +276,9 @@ ip addr show ens3
 ### 5.2 Instalación de Zabbix
 
 ```bash
-# Descargar e instalar repositorio Zabbix 6.0 LTS
-wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
-sudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
+# Descargar e instalar repositorio Zabbix 7.0 LTS (Ubuntu 20.04)
+wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu20.04_all.deb
+sudo dpkg -i zabbix-release_7.0-2+ubuntu20.04_all.deb
 sudo apt update
 
 # Instalar Zabbix server, frontend y agente
@@ -290,16 +290,20 @@ sudo apt install mariadb-server -y
 sudo systemctl start mariadb
 sudo systemctl enable mariadb
 
-# Crear base de datos
+# Crear base de datos y usuario
 sudo mysql -uroot -e "
   CREATE DATABASE zabbix CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
   CREATE USER 'zabbix'@'localhost' IDENTIFIED BY 'ZabbixPass123!';
   GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';
+  SET GLOBAL log_bin_trust_function_creators = 1;
   FLUSH PRIVILEGES;"
 
 # Importar esquema de base de datos
 zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | \
     mysql --default-character-set=utf8mb4 -uzabbix -pZabbixPass123! zabbix
+
+# Desactivar el flag una vez importado el schema (recomendación oficial)
+sudo mysql -uroot -e "SET GLOBAL log_bin_trust_function_creators = 0;"
 
 # Configurar contraseña de BD en Zabbix
 sudo sed -i 's/# DBPassword=/DBPassword=ZabbixPass123!/' \
