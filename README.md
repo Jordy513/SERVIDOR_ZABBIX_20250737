@@ -522,7 +522,7 @@ Todas las capturas están en la carpeta [`screenshots/`](screenshots/).
 | 06 | [`06_ubuntu_ip.png`](screenshots/06_ubuntu_ip.png) | Terminal Ubuntu mostrando `ip addr show ens34` con la IP estática `10.7.37.253/24` configurada y activa. |
 | 07 | [`07_zabbix_instalado.png`](screenshots/07_zabbix_instalado.png) | Terminal Ubuntu mostrando `systemctl status zabbix-server` con estado `active (running)`. |
 | 08 | [`08_zabbix_gui_login.png`](screenshots/08_zabbix_gui_login.png) | Navegador del host Windows mostrando la pantalla de login de Zabbix en `http://10.7.37.253/zabbix`. |
-| 09 | [`09_zabbix_setup_ok.png`](screenshots/09_zabbix_setup_ok.png) | Asistente de configuración de Zabbix con todos los prerrequisitos en verde y la conexión a la BD verificada. |
+| 09 | [`09_zabbix_setup_ok.png`](screenshots/09_zabbix_setup_ok.png) | Asistente de configuración de Zabbix con todos los prerrequisitos y la conexión a la BD verificada. |
 | 10 | [`10_zabbix_host_router.png`](screenshots/10_zabbix_host_router.png) | Formulario `Create host` en Zabbix mostrando R1 configurado con interfaz SNMP `10.7.37.1:161`, template `Cisco IOS SNMP` y macro `{$SNMP_COMMUNITY}=public_ro`. |
 | 11 | [`11_zabbix_router_verde.png`](screenshots/11_zabbix_router_verde.png) | Lista de hosts en Zabbix mostrando `R1` con ícono verde — confirmando que Zabbix recibe datos SNMP del Router correctamente. |
 | 12 | [`12_zabbix_host_switch.png`](screenshots/12_zabbix_host_switch.png) | Formulario `Create host` mostrando el Switch configurado con interfaz SNMP `10.7.37.2:161` y template `Cisco IOS SNMP`. |
