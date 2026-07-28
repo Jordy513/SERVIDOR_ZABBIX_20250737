@@ -554,8 +554,6 @@ Todas las capturas están en la carpeta [`screenshots/`](screenshots/).
 
 🎥 **[Ver demostración en YouTube](#)**
 
-> *(Enlace disponible en `videos.txt` en la raíz del repositorio)*
-
 **Contenido del video:**
 
 * ✅ Topología en PNETLab con nombre completo `Jordy Rosario — 20250737` visible.
