@@ -440,12 +440,15 @@ Clic en **Agregar** para guardar.
 
 Debe mostrar métricas SNMP como:
 
-| Métrica | OID SNMP |
+| Métrica | Grupo (etiqueta) |
 |---|---|
-| CPU utilization | `1.3.6.1.4.1.9.2.1.58.0` |
-| Uptime | `1.3.6.1.2.1.1.3.0` |
-| Interface traffic (in/out) | `1.3.6.1.2.1.2.2.1.10/16` |
-| System description | `1.3.6.1.2.1.1.1.0` |
+| CPU utilization | `component: cpu` |
+| ICMP ping / ICMP loss / ICMP response time | `component: health` |
+| Interface Et0/0: Bits received / Bits sent | `component: network` |
+| Interface Et0/0: Operational status | `component: network` |
+| Hardware model name / Hardware serial number | `component: system` |
+
+> Estos son los ítems reales generados por la plantilla `Cisco IOS by SNMP` de Zabbix 7.0 (no OIDs manuales) — cada uno consulta un OID SNMP específico por debajo, visible entrando al ítem individual desde `Recopilación de datos → Equipos → Métricas`.
 
 > Ver evidencia: [14_zabbix_latest_data_router.png](#14_zabbix_latest_data_routerpng)
 
