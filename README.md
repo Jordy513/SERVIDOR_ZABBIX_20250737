@@ -56,7 +56,7 @@ El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4
 ```
                          10.7.37.0/24
                                │
-                        e0/0: 10.7.37.1
+                        e0/0: 10.7.37.2
                        ┌───────┴───────┐
                        │    Router R1  │
                        │  Cisco IOS    │
@@ -77,8 +77,8 @@ El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4
        └───────────────┘
 
   Monitoreo SNMP:
-  Zabbix (10.7.37.253) ──SNMP v2c──► R1 (10.7.37.1)
-  Zabbix (10.7.37.253) ──SNMP v2c──► Switch (10.7.37.2)
+  Zabbix (10.7.37.253) ──SNMP v2c──► R1 (10.7.37.2)
+  Zabbix (10.7.37.253) ──SNMP v2c──► Switch (10.7.37.3)
 
   Acceso GUI Zabbix desde W10:
   W10 ──HTTP──► http://10.7.37.253/zabbix
@@ -88,8 +88,8 @@ El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4
 
 | Dispositivo | Interfaz | Dirección IP | Máscara | Gateway | Método | Rol |
 |---|---|---|---|---|---|---|
-| **R1** | e0/0 | 10.7.37.1 | /24 | — | Estática | Gateway LAN + DHCP + SNMP |
-| **Switch** | VLAN 1 (SVI) | 10.7.37.2 | /24 | 10.7.37.1 | Estática | Conmutación + SNMP |
+| **R1** | e0/0 | 10.7.37.2 | /24 | — | Estática | Gateway LAN + DHCP + SNMP |
+| **Switch** | VLAN 1 (SVI) | 10.7.37.3 | /24 | 10.7.37.1 | Estática | Conmutación + SNMP |
 | **Ubuntu (Zabbix)** | ens34 | 10.7.37.253 | /24 | 10.7.37.1 | Estática | Servidor de monitoreo |
 | **W10 (Host)** | e0 | 10.7.37.X | /24 | 10.7.37.1 | **DHCP** | Cliente + acceso GUI Zabbix |
 
@@ -108,7 +108,7 @@ El direccionamiento IP está derivado de la matrícula `20250737` — últimos 4
 | Parámetro | Valor |
 |---|---|
 | Red | `10.7.37.0/24` |
-| Gateway | `10.7.37.1` |
+| Gateway | `10.7.37.2` |
 | Rango | `10.7.37.10 – 10.7.37.200` |
 | DNS | `8.8.8.8`, `8.8.4.4` |
 | Excluidos | `10.7.37.1 – 10.7.37.9` (infraestructura) |
@@ -124,7 +124,7 @@ hostname R1
 
 interface ethernet0/0
  description RED-LAN
- ip address 10.7.37.1 255.255.255.0
+ ip address 10.7.37.2 255.255.255.0
  no shutdown
 ```
 
@@ -200,11 +200,11 @@ hostname Switch-Lab
 
 ! IP de gestión en VLAN 1
 interface vlan 1
- ip address 10.7.37.2 255.255.255.0
+ ip address 10.7.37.3 255.255.255.0
  no shutdown
 
 ! Gateway para alcanzar Zabbix
-ip default-gateway 10.7.37.1
+ip default-gateway 10.7.37.2
 ```
 
 > Ver evidencia: [04_switch_ip.png](#04_switch_ippng)
@@ -262,7 +262,7 @@ network:
         - 10.7.37.253/24
       routes:
         - to: default
-          via: 10.7.37.1
+          via: 10.7.37.2
       nameservers:
         addresses: [8.8.8.8, 8.8.4.4]
 ```
@@ -372,7 +372,7 @@ Seguir el asistente de instalación web (`setup.php`):
 | Campo | Valor |
 |---|---|
 | Nombre de host | `R1` |
-| Nombre visible | `Router R1 — 10.7.37.1` |
+| Nombre visible | `Router R1 — 10.7.37.2` |
 | Grupos | `Network devices` |
 | Interfaces → Agregar → SNMP | |
 | Dirección IP | `10.7.37.1` |
@@ -408,7 +408,7 @@ Clic en **Agregar** para guardar.
 | Campo | Valor |
 |---|---|
 | Nombre de host | `Switch-Lab` |
-| Nombre visible | `Switch Cisco — 10.7.37.2` |
+| Nombre visible | `Switch Cisco — 10.7.37.3` |
 | Grupos | `Network devices` |
 | Interfaces → Agregar → SNMP | |
 | Dirección IP | `10.7.37.2` |
@@ -481,8 +481,8 @@ Verificar que el adaptador de red muestra:
 |---|---|
 | Dirección IPv4 | `10.7.37.X` (dentro del rango `.10–.200`) |
 | Máscara | `255.255.255.0` |
-| Puerta de enlace | `10.7.37.1` |
-| Servidor DHCP | `10.7.37.1` |
+| Puerta de enlace | `10.7.37.2` |
+| Servidor DHCP | `10.7.37.2` |
 | DNS | `8.8.8.8` |
 
 > Ver evidencia: [17_cliente_dhcp.png](#17_cliente_dhcppng)
@@ -496,8 +496,8 @@ Instalar **SNMP Tester** o usar `snmpwalk` desde el host Windows para verificar 
 **Opción A — snmpwalk en Windows (requiere Net-SNMP instalado):**
 
 ```cmd
-snmpwalk -v2c -c public_ro 10.7.37.1 system
 snmpwalk -v2c -c public_ro 10.7.37.2 system
+snmpwalk -v2c -c public_ro 10.7.37.3 system
 ```
 
 *Salida esperada:*
@@ -512,7 +512,7 @@ SNMPv2-MIB::sysLocation.0 = STRING: Lab-ITLA-20250737
 **Opción B — GUI con iReasoning MIB Browser (más visual):**
 
 1. Descargar e instalar [iReasoning MIB Browser](https://ireasoning.com/mibbrowser.shtml)
-2. Address: `10.7.37.1` → Community: `public_ro` → Version: `v2c`
+2. Address: `10.7.37.2` → Community: `public_ro` → Version: `v2c`
 3. Expandir el árbol MIB y consultar el nodo `system`
 
 > Ver evidencia: [18_cliente_snmpwalk_router.png](#18_cliente_snmpwalk_routerpng) y [19_cliente_snmpwalk_switch.png](#19_cliente_snmpwalk_switchpng)
@@ -525,10 +525,10 @@ Todas las capturas están en la carpeta [`screenshots/`](screenshots/).
 
 | # | Archivo | Descripción |
 |---|---|---|
-| 01 | [`01_router_interfaces.png`](screenshots/01_router_interfaces.png) | `show ip interface brief` en R1 mostrando `e0/0: 10.7.37.1` en estado `up/up`. |
+| 01 | [`01_router_interfaces.png`](screenshots/01_router_interfaces.png) | `show ip interface brief` en R1 mostrando `e0/0: 10.7.37.2` en estado `up/up`. |
 | 02 | [`02_router_dhcp.png`](screenshots/02_router_dhcp.png) | `show ip dhcp binding` en el Router mostrando al menos un lease asignado al PC Cliente y al servidor Ubuntu, con sus IPs del rango `.10–.200`. |
 | 03 | [`03_router_snmp.png`](screenshots/03_router_snmp.png) | `show snmp community` en el Router confirmando la comunidad `public_ro` con acceso `NOAUTHNOPRIV` y permisos `ro`. |
-| 04 | [`04_switch_ip.png`](screenshots/04_switch_ip.png) | `show interface vlan 1` en el Switch mostrando la IP `10.7.37.2/24` en estado `up/up`. |
+| 04 | [`04_switch_ip.png`](screenshots/04_switch_ip.png) | `show interface vlan 1` en el Switch mostrando la IP `10.7.37.3/24` en estado `up/up`. |
 | 05 | [`05_switch_snmp.png`](screenshots/05_switch_snmp.png) | `show snmp community` en el Switch confirmando la comunidad `public_ro` con permisos `ro`. |
 | 06 | [`06_ubuntu_ip.png`](screenshots/06_ubuntu_ip.png) | Terminal Ubuntu mostrando `ip addr show ens34` con la IP estática `10.7.37.253/24` configurada y activa. |
 | 07 | [`07_zabbix_instalado.png`](screenshots/07_zabbix_instalado.png) | Terminal Ubuntu mostrando `systemctl status zabbix-server` con estado `active (running)`. |
