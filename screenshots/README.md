@@ -1,29 +1,23 @@
-# Capturas de pantalla — RemoteAPP + NPS (RADIUS) + AAA Cisco
-
-Capturas del laboratorio en orden de demostración.
+# Capturas de pantalla — Monitoreo de Red con Zabbix + SNMP
 
 | # | Archivo | Descripción |
 |---|---|---|
-| 01 | [01_server_ip_estatica.png](/screenshots/01_server_ip_estatica.png) | `ipconfig /all` confirmando IP `20.25.37.10/24` y gateway `20.25.37.254`. |
-| 02 | [02_dominio_creado.png](/screenshots/02_dominio_creado.png) | `Get-ADDomain` mostrando `DNSRoot: lab.local` tras la promoción a DC. |
-| 03 | [03_roles_instalados.png](/screenshots/03_roles_instalados.png) | `Get-WindowsFeature` confirmando RDS-RD-Server, RDS-Connection-Broker y RDS-Web-Access como `Installed`. |
-| 04 | [04_get_rdserver.png](/screenshots/04_get_rdserver.png) | `Get-RDServer` mostrando los tres roles asignados a `SERVER-LOCAL.LAB.LOCAL`. |
-| 05 | [05_rdweb_certificado_ok.png](/screenshots/05_rdweb_certificado_ok.png) | Portal RDWeb cargando sin el error `ERR_SSL_KEY_USAGE_INCOMPATIBLE` tras el nuevo certificado. |
-| 06 | [06_collection_creada.png](/screenshots/06_collection_creada.png) | Colección de sesiones `RemoteAPP-Collection` creada. |
-| 07 | [07_remoteapp_publicado.png](/screenshots/07_remoteapp_publicado.png) | Administrador de RemoteApp con Notepad publicado. |
-| 08 | [08_iis_pagina_custom.png](/screenshots/08_iis_pagina_custom.png) | Página personalizada de IIS cargando en el navegador. |
-| 09 | [09_iis_virtual_directory.png](/screenshots/09_iis_virtual_directory.png) | Directorio virtual `RemoteAPPAccess` en IIS Manager. |
-| 10 | [10_remoteapp_iis_publicado.png](/screenshots/10_remoteapp_iis_publicado.png) | Edge publicado como RemoteApp apuntando a la página IIS. |
-| 11 | [11_usuarios_ad.png](/screenshots/11_usuarios_ad.png) | Usuarios `admin_lab` y `user_lab` creados en AD. |
-| 12 | [12_nps_radius_client.png](/screenshots/12_nps_radius_client.png) | Cliente RADIUS `Cisco-Router-Lab` en NPS. |
-| 13 | [13_nps_policy_level15.png](/screenshots/13_nps_policy_level15.png) | Política `Admin_Level_15` con atributo `shell:priv-lvl=15`. |
-| 14 | [14_nps_policy_level1.png](/screenshots/14_nps_policy_level1.png) | Política `User_Level_1` con atributo `shell:priv-lvl=1`. |
-| 15 | [15_cliente_pagina_iis.png](/screenshots/15_cliente_pagina_iis.png) | Cliente accediendo a la página IIS directamente. |
-| 16 | [16_rdweb_login.png](/screenshots/16_rdweb_login.png) | Login exitoso en el portal RDWeb con `admin_lab`. |
-| 17 | [17_rdweb_app_lanzada.png](/screenshots/17_rdweb_app_lanzada.png) | App RemoteAPP lanzada desde RDWeb. |
-| 18 | [18_remoteapp_rdp_directo.png](/screenshots/18_remoteapp_rdp_directo.png) | App RemoteAPP lanzada desde archivo `.rdp` directo. |
-| 19 | [19_ssh_nivel15.png](/screenshots/19_ssh_nivel15.png) | SSH como `admin_lab`, `show privilege` = 15. |
-| 20 | [20_ssh_nivel1.png](/screenshots/20_ssh_nivel1.png) | SSH como `user_lab`, `show privilege` = 1, `show run` denegado. |
-| 21 | [21_show_aaa_servers.png](/screenshots/21_show_aaa_servers.png) | `show aaa servers` con NPS en `State: current UP`. |
-| 22 | [22_show_aaa_sessions.png](/screenshots/22_show_aaa_sessions.png) | `show aaa sessions` con sesiones activas. |
-| 23 | [23_debug_radius_output.png](/screenshots/23_debug_radius_output.png) | `debug radius` mostrando Access-Request / Access-Accept. |
+| 01 | [`01_router_interfaces.png`](/screenshots/01_router_interfaces.png) | `show ip interface brief` en R1 mostrando `e0/0: 10.7.37.2` en estado `up/up`. |
+| 02 | [`02_router_dhcp.png`](/screenshots/02_router_dhcp.png) | `show ip dhcp binding` en el Router mostrando al menos un lease asignado al PC Cliente y al servidor Ubuntu, con sus IPs del rango `.10–.200`. |
+| 03 | [`03_router_snmp.png`](/screenshots/03_router_snmp.png) | `show snmp community` en el Router confirmando la comunidad `public_ro` con acceso `NOAUTHNOPRIV` y permisos `ro`. |
+| 04 | [`04_switch_ip.png`](/screenshots/04_switch_ip.png) | `show interface vlan 1` en el Switch mostrando la IP `10.7.37.3/24` en estado `up/up`. |
+| 05 | [`05_switch_snmp.png`](/screenshots/05_switch_snmp.png) | `show snmp community` en el Switch confirmando la comunidad `public_ro` con permisos `ro`. |
+| 06 | [`06_ubuntu_ip.png`](/screenshots/06_ubuntu_ip.png) | Terminal Ubuntu mostrando `ip addr show ens34` con la IP estática `10.7.37.253/24` configurada y activa. |
+| 07 | [`07_zabbix_instalado.png`](/screenshots/07_zabbix_instalado.png) | Terminal Ubuntu mostrando `systemctl status zabbix-server` con estado `active (running)`. |
+| 08 | [`08_zabbix_gui_login.png`](/screenshots/08_zabbix_gui_login.png) | Navegador del host Windows mostrando la pantalla de login de Zabbix en `http://10.7.37.253/zabbix`. |
+| 09 | [`09_zabbix_setup_ok.png`](/screenshots/09_zabbix_setup_ok.png) | Asistente de instalación web de Zabbix en el paso "Comprobación de requisitos previos" con todo en verde. |
+| 10 | [`10_zabbix_host_router.png`](/screenshots/10_zabbix_host_router.png) | Formulario `Crear equipo` en Zabbix mostrando R1 configurado con interfaz SNMP `10.7.37.1:161`, plantilla `Cisco IOS SNMP` y macro `{$SNMP_COMMUNITY}=public_ro`. |
+| 11 | [`11_zabbix_router_verde.png`](/screenshots/11_zabbix_router_verde.png) | Lista de equipos en Zabbix mostrando `R1` con ícono verde — confirmando que Zabbix recibe datos SNMP del Router correctamente. |
+| 12 | [`12_zabbix_host_switch.png`](/screenshots/12_zabbix_host_switch.png) | Formulario `Crear equipo` mostrando el Switch configurado con interfaz SNMP `10.7.37.2:161` y plantilla `Cisco IOS SNMP`. |
+| 13 | [`13_zabbix_switch_verde.png`](/screenshots/13_zabbix_switch_verde.png) | Lista de equipos mostrando `Switch-Lab` con ícono verde — Zabbix recibiendo datos SNMP del Switch. |
+| 14 | [`14_zabbix_latest_data_router.png`](/screenshots/14_zabbix_latest_data_router.png) | `Monitorización → Últimos datos` filtrado por `R1` mostrando métricas SNMP activas: uptime, descripción del sistema, tráfico de interfaces. |
+| 15 | [`15_zabbix_events.png`](/screenshots/15_zabbix_events.png) | `Monitorización → Problemas` mostrando los eventos generados por las plantillas de Cisco IOS SNMP. |
+| 16 | [`16_zabbix_graphs_switch.png`](/screenshots/16_zabbix_graphs_switch.png) | `Monitorización → Últimos datos` filtrado por `Switch-Lab` mostrando al menos una gráfica de tráfico o CPU activa con datos. |
+| 17 | [`17_cliente_dhcp.png`](/screenshots/17_cliente_dhcp.png) | `ipconfig /all` en el host Windows mostrando IP `10.7.37.X` asignada por DHCP con gateway `10.7.37.1` y servidor DHCP `10.7.37.1`. |
+| 18 | [`18_cliente_snmpwalk_router.png`](/screenshots/18_cliente_snmpwalk_router.png) | Terminal del host Windows mostrando la salida de `snmpwalk` hacia `10.7.37.1` con los campos `sysDescr`, `sysUpTime`, `sysContact` y `sysLocation` del Router. |
+| 19 | [`19_cliente_snmpwalk_switch.png`](/screenshots/19_cliente_snmpwalk_switch.png) | Terminal del host Windows mostrando la salida de `snmpwalk` hacia `10.7.37.2` con los datos SNMP del Switch. |
